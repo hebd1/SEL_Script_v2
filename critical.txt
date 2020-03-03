@@ -1,0 +1,17 @@
+Failed
+Failure
+Uncorrectable ECC
+to Critical
+_CAT_ERR
+VSA PG voltage is outside of range
+vcore pg voltage is outside of range
+Fatal
+voltage vtt cpu1 fail
+voltage vtt cpu2 fail
+critical interrupt pcie fatal err
+rpm is outside of range
+fan redundancy lost
+Power Supply PS Redundancy | Redundancy Lost
+Memory Mem ECC Warning | Transition to Critical from less severe
+Event Logging Disabled SBE Log Disabled | Correctable memory error logging disabled
+Memory Mmry ECC Sensor | Correctable ECC
