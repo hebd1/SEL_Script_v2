@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#This daily script parses the saved SEL of each node in each cluster and creates a daily report of critical and frequently occuring events. System Event Logs are collected and saved to /uufs/chpc.utah.edu/common/home/chpc-data/SEL_Archive. This script then parses SEL_Archive, generates a daily report saved to /uufs/chpc.utah.edu/common/home/chpc-data/SEL_Reports, and emails the reported formatted in HTML. Last updated 01/028/2020 -eli hebdon 
+#This daily script parses the saved SEL of each node for each cluster and creates a daily report of critical and frequently occuring events. System Event Logs are collected and saved to /uufs/chpc.utah.edu/common/home/chpc-data/SEL_Archive. This script then parses SEL_Archive, generates a daily report saved to /uufs/chpc.utah.edu/common/home/chpc-data/SEL_Reports, and emails the reported formatted in HTML. Last updated 01/028/2020 -eli hebdon 
 
 export PATH="/usr/lib64/qt-3.3/bin:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin"
 NOW=$(date +"%Y-%m-%d" 2>/dev/null)
@@ -10,7 +10,7 @@ REPORTDIR="/uufs/chpc.utah.edu/common/home/chpc-data/sel_scripts/logs/sel_report
 DICTIONARY='/uufs/chpc.utah.edu/common/home/chpc-data/sel_scripts/bin/critical.txt'
 
 
-#returns true if the given parameter contains an event that occured within the last month
+# Returns true if the given SEL parameter contains an event that occured within the last month
 is_recent() {
 
 
@@ -25,7 +25,7 @@ is_recent() {
 	fi
 }
 
-#only run once on notchrm
+# Only run once on notchrm
 if [ "$HOSTNAME" = notchrm 2>/dev/null ]
 then
         echo "Running SEL Parser cron" | logger 2>/dev/null
@@ -91,10 +91,10 @@ then
                for node in ${ARCHIVEDIR}/${CLUSTER}/*; do
                        LOG=$(find $node -name "*${NOW}*" 2>/dev/null)
                        HOST=$(basename "$node" 2>/dev/null)
-                       #no log found on node, save as unresponsive
+                       # no log found on node, save as unresponsive
 		       if [ ! -e "$LOG" ]
                        then
-                               echo -n "$HOST," >> ${REPORTDIR}/unresponsive.tmp 2>/dev/null
+                               echo -n "$HOST, " >> ${REPORTDIR}/unresponsive.tmp 2>/dev/null
 		       else
 			       # parse out recent critical events
 			       CRITICAL=$(cat "${LOG}" | grep -f "$DICTIONARY" | tail -1) 
@@ -112,10 +112,10 @@ then
 					CRITICALROW=$((CRITICALROW+1))
 			       fi
 
-			       # only parse logs with recent events				
+			       # Only parse logs with recent events				
 			       MOSTRECENT=$(cat "${LOG}" | tail -1 | cut -d "|" -f2)
 			       if is_recent "$MOSTRECENT"; then
-                              	 	#parse out frequently occuring events that clog up the log
+                              	 	# Parse out frequently occuring events that clog up the log
                               	 	CLOG=$(cat "${LOG}" | cut -d "|" -f 4,5 | sort | uniq -c | sort -n | tail -1 2>/dev/null)                            
 			      	 	OCCURANCES=$(echo "$CLOG" | awk '{ print $1 }')
 			      	 	EVENT=$(echo "$CLOG" | cut -d '|' -f1 | cut -d ' ' -f6-)
@@ -144,12 +144,12 @@ then
         ) > ${REPORTDIR}/report.html
 
  
-       #parse out top issues and append to the top of the report
+       # Parse out top issues and append to the top of the report
        FOCUSED=$(cat "${REPORTDIR}/${NOW}.rpt" | grep -f "$DICTIONARY" | tail -1 2>/dev/null)
        echo -e "--------Critical Events---------\n${FOCUSED}\n$(cat "${REPORTDIR}/${NOW}.rpt")" > ${REPORTDIR}/${NOW}.rpt
        echo -e "<h3> Report for $NOW </h3><p> The purpose of this report is to identify nodes with amber lights. The tables below list both recent critical events as well as frequently occuring events that clog up the SEL of each node. Critical events that could cause amber lights are listed first. Events must occur within the last 30 days to be considered recent. It is not guaranteed that the listed nodes will have amber lights as events that cause amber lights are not standardized across OEMs and models. Once the amber has been resolved, the SEL of the node should be cleared in order to remove the node from this list.</p>$(cat "${REPORTDIR}/critical.html")\n$(cat "${REPORTDIR}/report.html")" > ${REPORTDIR}/report.html
 
-        #place unresponsive nodes in report
+        # Place unresponsive nodes in report
         UNRESPONSIVE=$(cat ${REPORTDIR}/unresponsive.tmp 2>/dev/null)
         echo -e "\n--------Unresponsive Nodes---------\n${UNRESPONSIVE}\n" >> ${REPORTDIR}/${NOW}.rpt
         echo -e "\nUnresponsive Nodes:\n${UNRESPONSIVE}\n" >> ${REPORTDIR}/report.html
@@ -168,7 +168,7 @@ echo
 cat ${REPORTDIR}/report.html
 ) | /usr/sbin/sendmail -t
 
-#remove html files
+# Remove html files
 rm ${REPORTDIR}/report.html 2>/dev/null
 rm ${REPORTDIR}/critical.html 2>/dev/null
 exit 0
